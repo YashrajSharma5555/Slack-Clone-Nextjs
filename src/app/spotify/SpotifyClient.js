@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import qs from 'query-string';
 import axios from 'axios';
 import { useSearchParams } from 'next/navigation';
 
@@ -16,7 +15,7 @@ export default function SpotifyClient() {
   useEffect(() => {
     async function fetchSpotifyData() {
       if (!code) {
-        const query = qs.stringify({
+        const query = new URLSearchParams({
           client_id: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
           response_type: 'code',
           redirect_uri: 'https://slack-clone-nextjs-silk.vercel.app/spotify',
@@ -24,25 +23,12 @@ export default function SpotifyClient() {
             'user-top-read user-read-playback-state user-modify-playback-state streaming',
         });
 
-        window.location.href = `https://accounts.spotify.com/authorize?${query}`;
+        window.location.href = `https://accounts.spotify.com/authorize?${query.toString()}`;
         return;
       }
 
       try {
-        const tokenResponse = await axios.post(
-          'https://accounts.spotify.com/api/token',
-          new URLSearchParams({
-            grant_type: 'authorization_code',
-            code,
-            redirect_uri: 'https://slack-clone-nextjs-silk.vercel.app/spotify',
-            client_id: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
-            client_secret: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET,
-          }),
-          {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          }
-        );
-
+        const tokenResponse = await axios.post('/api/spotify/token', { code });
         const access_token = tokenResponse.data.access_token;
         setToken(access_token);
 
@@ -71,9 +57,7 @@ export default function SpotifyClient() {
         'https://api.spotify.com/v1/me/player/play',
         { uris: [uri] },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
     } catch (err) {
@@ -87,9 +71,7 @@ export default function SpotifyClient() {
         'https://api.spotify.com/v1/me/player/pause',
         {},
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
     } catch (err) {
