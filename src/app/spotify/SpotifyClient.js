@@ -17,7 +17,7 @@ export default function SpotifyClient() {
     async function fetchSpotifyData() {
       if (!code) {
         const query = qs.stringify({
-          client_id: process.env.SPOTIFY_CLIENT_ID,
+          client_id: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
           response_type: 'code',
           redirect_uri: 'https://slack-clone-nextjs-silk.vercel.app/spotify',
           scope:
@@ -35,8 +35,8 @@ export default function SpotifyClient() {
             grant_type: 'authorization_code',
             code,
             redirect_uri: 'https://slack-clone-nextjs-silk.vercel.app/spotify',
-            client_id: process.env.SPOTIFY_CLIENT_ID,
-            client_secret: process.env.SPOTIFY_CLIENT_SECRET,
+            client_id: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
+            client_secret: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET,
           }),
           {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
