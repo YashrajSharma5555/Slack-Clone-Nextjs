@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         code,
         redirect_uri: 'https://slack-clone-nextjs-silk.vercel.app/spotify',
         client_id: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
-        client_secret: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET,  // Secret only on the server side
+        client_secret: process.env.SPOTIFY_CLIENT_SECRET,  // Secret only on the server side
       }),
       {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
