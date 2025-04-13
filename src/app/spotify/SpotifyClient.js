@@ -46,17 +46,20 @@ export default function SpotifyClient() {
 
         const access_token = tokenResponse.data.access_token;
         setToken(access_token);
+        console.log('Access Token:', access_token); // Log token
 
         // Step 2: Fetch top tracks
         const topTracksResponse = await axios.get('https://api.spotify.com/v1/me/top/tracks?limit=10', {
           headers: { Authorization: `Bearer ${access_token}` },
         });
+        console.log('Top Tracks Response:', topTracksResponse.data); // Log top tracks response
         setTracks(topTracksResponse.data.items);
 
         // Step 3: Fetch the currently playing track
         const nowPlayingResponse = await axios.get('https://api.spotify.com/v1/me/player/currently-playing', {
           headers: { Authorization: `Bearer ${access_token}` },
         });
+        console.log('Now Playing Response:', nowPlayingResponse.data); // Log now playing response
         
         // Step 4: Check if there's a track playing
         if (!nowPlayingResponse.data || !nowPlayingResponse.data.item) {
