@@ -29,85 +29,62 @@ export default function SpotifyClient() {
       }
 
       try {
-        // Step 1: Exchange code for access token
-        const tokenResponse = await axios.post(
-          'https://accounts.spotify.com/api/token',
-          new URLSearchParams({
-            grant_type: 'authorization_code',
-            code,
-            redirect_uri: 'https://slack-clone-nextjs-silk.vercel.app/spotify',
-            client_id: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
-            client_secret: process.env.SPOTIFY_CLIENT_SECRET,
-          }),
-          {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          }
-        );
+        // Exchange code for token via API route
+        const tokenRes = await axios.post('/api/spotify/token', { code });
+        const access_token = tokenRes.data.access_token;
 
-        const access_token = tokenResponse.data.access_token;
+        if (!access_token) {
+          throw new Error('Access token not received');
+        }
+
         setToken(access_token);
-        console.log('Access Token:', access_token); // Log token
+        console.log('Access Token:', access_token);
 
-        // Step 2: Fetch top tracks
-        const topTracksResponse = await axios.get('https://api.spotify.com/v1/me/top/tracks?limit=10', {
+        // Fetch top tracks
+        const topTracksRes = await axios.get('https://api.spotify.com/v1/me/top/tracks?limit=10', {
           headers: { Authorization: `Bearer ${access_token}` },
         });
-        console.log('Top Tracks Response:', topTracksResponse.data); // Log top tracks response
-        setTracks(topTracksResponse.data.items);
+        setTracks(topTracksRes.data.items);
 
-        // Step 3: Fetch the currently playing track
-        const nowPlayingResponse = await axios.get('https://api.spotify.com/v1/me/player/currently-playing', {
+        // Fetch now playing
+        const nowPlayingRes = await axios.get('https://api.spotify.com/v1/me/player/currently-playing', {
           headers: { Authorization: `Bearer ${access_token}` },
         });
-        console.log('Now Playing Response:', nowPlayingResponse.data); // Log now playing response
-        
-        // Step 4: Check if there's a track playing
-        if (!nowPlayingResponse.data || !nowPlayingResponse.data.item) {
-          console.log("No track is currently playing.");
-          setNowPlaying(null);  // No track playing
+
+        if (!nowPlayingRes.data || !nowPlayingRes.data.item) {
+          setNowPlaying(null);
         } else {
-          console.log("Now playing:", nowPlayingResponse.data.item); // Log the current track data
-          setNowPlaying(nowPlayingResponse.data.item);
+          setNowPlaying(nowPlayingRes.data.item);
         }
       } catch (error) {
-        console.error('Error fetching Spotify data:', error);
+        console.error('Error:', error.response?.data || error.message);
       }
     }
 
     fetchSpotifyData();
   }, [code]);
 
-  // Function to play a track
   const playTrack = async (uri) => {
     try {
       await axios.put(
         'https://api.spotify.com/v1/me/player/play',
         { uris: [uri] },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
     } catch (err) {
-      console.error('Failed to play track:', err);
+      console.error('Play error:', err.response?.data || err.message);
     }
   };
 
-  // Function to pause the track
   const pauseTrack = async () => {
     try {
       await axios.put(
         'https://api.spotify.com/v1/me/player/pause',
         {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
     } catch (err) {
-      console.error('Failed to pause:', err);
+      console.error('Pause error:', err.response?.data || err.message);
     }
   };
 
