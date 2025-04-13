@@ -1,5 +1,3 @@
-// app/spotify/page.js
-
 import { redirect } from 'next/navigation';
 import qs from 'query-string';
 import axios from 'axios';
@@ -8,27 +6,24 @@ export default async function SpotifyPage({ searchParams }) {
   const code = searchParams?.code;
 
   if (!code) {
-    // If there's no code, redirect the user to Spotify for authorization
     const query = qs.stringify({
       client_id: process.env.SPOTIFY_CLIENT_ID,
       response_type: 'code',
-      redirect_uri: 'https://slack-clone-nextjs-silk.vercel.app/spotify', // Use localhost for testing
-      scope: 'user-top-read user-read-playback-state user-modify-playback-state',
+      redirect_uri: 'https://slack-clone-nextjs-silk.vercel.app/spotify',
+      scope: 'user-top-read user-read-playback-state user-modify-playback-state streaming',
     });
 
-    // Redirect to Spotify for login
     redirect(`https://accounts.spotify.com/authorize?${query}`);
-    return; // Return to stop further code execution
+    return;
   }
 
   try {
-    // 1. Exchange code for access token
     const tokenResponse = await axios.post(
       'https://accounts.spotify.com/api/token',
       new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: 'https://slack-clone-nextjs-silk.vercel.app/spotify', // Use localhost for testing
+        redirect_uri: 'https://slack-clone-nextjs-silk.vercel.app/spotify',
         client_id: process.env.SPOTIFY_CLIENT_ID,
         client_secret: process.env.SPOTIFY_CLIENT_SECRET,
       }),
@@ -39,7 +34,6 @@ export default async function SpotifyPage({ searchParams }) {
 
     const access_token = tokenResponse.data.access_token;
 
-    // 2. Get top 10 tracks and currently playing
     const [topTracks, nowPlaying] = await Promise.all([
       axios.get('https://api.spotify.com/v1/me/top/tracks?limit=10', {
         headers: { Authorization: `Bearer ${access_token}` },
@@ -49,18 +43,19 @@ export default async function SpotifyPage({ searchParams }) {
       }),
     ]);
 
-    // Prepare the result for the frontend
     const result = {
       topTracks: topTracks.data.items.map((track) => ({
         name: track.name,
         artist: track.artists.map((a) => a.name).join(', '),
         uri: track.uri,
+        playUrl: `https://api.spotify.com/v1/me/player/play?track_uri=${encodeURIComponent(track.uri)}&token=${access_token}`,
       })),
       nowPlaying: nowPlaying.data?.item
         ? {
             name: nowPlaying.data.item.name,
             artist: nowPlaying.data.item.artists.map((a) => a.name).join(', '),
             uri: nowPlaying.data.item.uri,
+            pauseUrl: `https://api.spotify.com/v1/me/player/pause?token=${access_token}`,
           }
         : null,
     };
